@@ -4,36 +4,36 @@ import './index.css';
 // Helper functions
 function calculateDelayMinutes(delayString) {
   if (!delayString) return 0;
-  
+
   const [hours, minutes] = delayString.split(':').map(Number);
   return hours * 60 + minutes;
 }
 
 function formatTime(timeString) {
   if (!timeString) return 'N/A';
-  
+
   const [hours, minutes] = timeString.split(':');
   const hour = parseInt(hours, 10);
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const formattedHour = hour % 12 || 12;
-  
+
   return `${formattedHour}:${minutes} ${ampm}`;
 }
 
 function formatDelay(delayString) {
   if (!delayString) return 'On time';
-  
+
   const delayMinutes = calculateDelayMinutes(delayString);
-  
+
   if (delayMinutes === 0) return 'On time';
-  
+
   const hours = Math.floor(delayMinutes / 60);
   const minutes = delayMinutes % 60;
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m late`;
   }
-  
+
   return `${minutes}m late`;
 }
 
@@ -46,31 +46,39 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!trainNumber.trim()) {
       setError('Please enter a train number');
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      // Format date to DD-MMM-YYYY (e.g., 27-Apr-2025)
-      const formattedDate = new Date(date).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      }).replace(/ /g, '-');
-      
+      // Format date to YYYYMMDD (e.g., 20250427)
+      const formattedDate = new Date(date).toISOString().slice(0, 10).replace(/-/g, '');
+
       const response = await fetch(
-        `https://miawz4m9pi.execute-api.us-east-1.amazonaws.com/dev/train-status?trainNumber=${trainNumber}&date=${formattedDate}`
+        `https://le2r9wfld2.execute-api.us-east-1.amazonaws.com/dev/train-details?trainNumber=${trainNumber}&date=${formattedDate}`,
+        {
+          headers: {
+            'accept': '*/*',
+            'accept-language': 'en-US,en;q=0.9',
+            'origin': window.location.origin,
+            'referer': window.location.href,
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'cross-site',
+            'user-agent': navigator.userAgent
+          }
+        }
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch train status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setTrainData(data);
     } catch (err) {
@@ -79,7 +87,7 @@ function App() {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-blue-600 text-white shadow-md">
@@ -87,7 +95,7 @@ function App() {
           <h1 className="text-2xl font-bold">Train Tracker</h1>
         </div>
       </header>
-      
+
       <main className="container mx-auto px-4 py-6 animate-fadeIn">
         {!trainData ? (
           <div className="max-w-md mx-auto">
@@ -97,14 +105,14 @@ function App() {
                 Get real-time updates on your train's location, arrival times, and delays
               </p>
             </div>
-            
+
             <div className="card">
               {error && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-md">
                   <p className="text-red-700">{error}</p>
                 </div>
               )}
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <label htmlFor="trainNumber" className="block text-sm font-medium text-gray-700 mb-1">
@@ -120,7 +128,7 @@ function App() {
                     disabled={isLoading}
                   />
                 </div>
-                
+
                 <div className="mb-6">
                   <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
                     Journey Date
@@ -135,7 +143,7 @@ function App() {
                     min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
-                
+
                 <button
                   type="submit"
                   className="btn-primary w-full flex justify-center items-center"
@@ -158,7 +166,7 @@ function App() {
           </div>
         ) : (
           <div className="max-w-3xl mx-auto">
-            <button 
+            <button
               onClick={() => setTrainData(null)}
               className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-200 mb-6"
             >
@@ -167,7 +175,7 @@ function App() {
               </svg>
               Back to Search
             </button>
-            
+
             <div className="card">
               <div className="flex justify-between items-start">
                 <div>
@@ -177,8 +185,8 @@ function App() {
                     Last updated: {new Date(trainData.lastUpdated).toLocaleString()}
                   </p>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={handleSubmit}
                   className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
                   title="Refresh"
@@ -188,24 +196,24 @@ function App() {
                   </svg>
                 </button>
               </div>
-              
+
               {trainData.stations && trainData.stations.length > 0 && (
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Station Timeline</h3>
-                  
+
                   <div className="space-y-0">
                     {trainData.stations.map((station, index) => {
                       const isCurrentStation = station.stationCode === (trainData.currentStation?.stationCode || '');
                       const delayMinutes = calculateDelayMinutes(station.delayDeparture || station.delayArrival);
                       const isDelayed = delayMinutes > 10;
-                      
+
                       return (
-                        <div 
+                        <div
                           key={`${station.stationCode}-${index}`}
                           className={`station-item ${isCurrentStation ? 'station-current' : ''} ${isDelayed ? 'station-delayed' : ''}`}
                         >
                           <div className="station-dot"></div>
-                          
+
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                             <div className="flex-1">
                               <h4 className="text-base font-medium text-gray-900">
@@ -216,29 +224,29 @@ function App() {
                                   </span>
                                 )}
                               </h4>
-                              
+
                               <p className="text-sm text-gray-600">
                                 Day {station.day} • {station.date}
                               </p>
                             </div>
-                            
+
                             <div className="flex flex-col md:items-end mt-2 md:mt-0">
                               <div className="flex items-center space-x-4">
                                 <div>
                                   <div className="text-xs text-gray-500">Arrival</div>
                                   <div className="font-medium">{formatTime(station.arrivalTime) || 'N/A'}</div>
                                 </div>
-                                
+
                                 <div>
                                   <div className="text-xs text-gray-500">Departure</div>
                                   <div className="font-medium">{formatTime(station.departureTime) || 'N/A'}</div>
                                 </div>
                               </div>
-                              
+
                               {(station.delayArrival || station.delayDeparture) && (
                                 <div className={`mt-1 text-sm ${isDelayed ? 'text-red-600 font-medium' : 'text-orange-500'}`}>
                                   {formatDelay(station.delayDeparture || station.delayArrival)}
-                                  
+
                                   {isDelayed && (
                                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
                                       Delayed
@@ -258,7 +266,7 @@ function App() {
           </div>
         )}
       </main>
-      
+
       <footer className="bg-gray-100 border-t border-gray-200 mt-auto">
         <div className="container mx-auto px-4 py-4 text-center text-gray-600 text-sm">
           <p>© {new Date().getFullYear()} Train Tracker | Real-time train tracking application</p>
