@@ -1,12 +1,87 @@
-# React + Vite
+# Train Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A high-quality React application to display live train locations based on train number and date inputs. The app features a modern, responsive UI built with TailwindCSS.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Real-time Train Tracking**: Get live updates on train locations, arrival times, and delays
+- **Beautiful UI**: Modern and responsive design using TailwindCSS
+- **Station Timeline**: Visual representation of the train's journey with station details
+- **Delay Tracking**: Highlights stations with significant delays
+- **Journey Progress**: Visual indicator of journey completion percentage
+- **Offline Detection**: Notifies users when they're offline
+- **Responsive Design**: Works beautifully on mobile, tablet, and desktop
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React (with Vite)
+- TailwindCSS
+- React Router
+- React Query
+- Axios
+- DayJS
+- React DatePicker
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+4. Open your browser and navigate to `http://localhost:5173`
+
+## API
+
+The application uses the following API endpoint to fetch train status data:
+
+```
+https://miawz4m9pi.execute-api.us-east-1.amazonaws.com/dev/train-status?trainNumber=<trainNumber>&date=<date>
+```
+
+Where:
+- `trainNumber`: The train number (e.g., 12050)
+- `date`: The date in DD-MMM-YYYY format (e.g., 27-Apr-2025)
+
+## Project Structure
+
+```
+src/
+  components/
+    TrainForm.jsx       # Form for train number and date inputs
+    TrainStatus.jsx     # Displays train details and status
+    StationTimeline.jsx # Timeline of stations with status
+    Loader.jsx          # Loading indicator
+    ErrorMessage.jsx    # Error message display
+  pages/
+    Home.jsx           # Home page with the train form
+    Status.jsx         # Status page showing train details
+  services/
+    trainApi.js        # API service for fetching train data
+  utils/
+    dateFormatter.js   # Utilities for date/time formatting
+  App.jsx             # Main application component with routing
+  index.css           # Global styles with Tailwind directives
+  main.jsx            # Application entry point
+```
+
+## Build for Production
+
+To build the application for production, run:
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory, ready to be deployed.
